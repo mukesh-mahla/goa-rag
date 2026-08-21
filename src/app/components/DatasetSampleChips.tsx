@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Sparkles, CheckCircle2, ShieldAlert, Terminal } from "lucide-react";
+import { CheckCircle2, ShieldAlert, CornerDownRight, Terminal } from "lucide-react";
 
 interface DatasetSampleChipsProps {
   onSelectQuery: (query: string) => void;
@@ -83,48 +83,74 @@ export default function DatasetSampleChips({
   const samples = language === "en-IN" ? SAMPLE_QUERIES_EN : SAMPLE_QUERIES_HI;
 
   return (
-    <div className="w-full">
-      <div className="flex items-center justify-between gap-1.5 mb-2 text-slate-400 font-mono text-[11px] uppercase tracking-wider">
-        <div className="flex items-center gap-1.5">
-          <Terminal className="w-3.5 h-3.5 text-cyan-400" />
-          <span>{language === "en-IN" ? "Sample Prompts (English)" : "त्वरित प्रश्न (हिंदी)"}</span>
+    <div className="w-full space-y-3">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
+        <div className="flex items-center gap-2">
+          <Terminal className="w-3.5 h-3.5 text-purple-400" />
+          <span className="text-xs uppercase tracking-wider text-slate-300 font-semibold">
+            {language === "en-IN" ? "Sample Prompts (English)" : "त्वरित प्रश्न (हिंदी)"}
+          </span>
         </div>
-        <span className="text-[10px] text-slate-500 font-mono">
-          {language === "en-IN" ? "Mode: English" : "मोड: हिन्दी"}
-        </span>
+        <div className="text-[11px] text-slate-400 flex items-center gap-2">
+          <span>{language === "en-IN" ? "Mode: English" : "मोड: हिन्दी"}</span>
+        </div>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      {/* Grid of Specimen Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {samples.map((sample, idx) => (
           <button
             key={idx}
             type="button"
             disabled={disabled}
             onClick={() => onSelectQuery(sample.query)}
-            className={`group text-left px-3 py-1.5 rounded-xl text-xs transition-all border flex items-center gap-2 ${
-              sample.isMatched
-                ? "bg-slate-900/90 hover:bg-cyan-950/40 border-slate-800 hover:border-cyan-500/50 text-slate-300 hover:text-white"
-                : "bg-slate-900/90 hover:bg-rose-950/40 border-slate-800 hover:border-rose-500/50 text-rose-300 hover:text-white"
-            } hover:scale-[1.01] active:scale-[0.99]`}
+            className="group relative text-left p-4 rounded-xl bg-[#0f1422]/90 hover:bg-[#151c30] border border-slate-800/80 hover:border-purple-500/50 transition-all duration-200 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-md hover:shadow-purple-500/10"
           >
-            {sample.isMatched ? (
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 group-hover:scale-110 transition-transform" />
-            ) : (
-              <ShieldAlert className="w-3.5 h-3.5 text-rose-400 shrink-0 group-hover:scale-110 transition-transform" />
-            )}
-            <span className="font-medium text-xs truncate max-w-[240px]">{sample.query}</span>
-            <span
-              className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
-                sample.isMatched
-                  ? "bg-cyan-950 text-cyan-400 border border-cyan-800/60"
-                  : "bg-rose-950 text-rose-400 border border-rose-800/60"
-              }`}
-            >
-              {sample.tag}
-            </span>
+            {/* Top Metadata Row */}
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div className="flex items-center gap-2">
+                {sample.isMatched ? (
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                ) : (
+                  <ShieldAlert className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                )}
+                <span className="font-medium text-xs text-slate-200 group-hover:text-white">
+                  {sample.label}
+                </span>
+              </div>
+
+              <span
+                className={`text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider font-semibold border ${
+                  sample.isMatched
+                    ? "bg-emerald-950/60 text-emerald-300 border-emerald-800/50"
+                    : "bg-rose-950/60 text-rose-300 border-rose-800/50"
+                }`}
+              >
+                {sample.tag}
+              </span>
+            </div>
+
+            {/* Specimen Query Text */}
+            <p className="text-xs text-slate-300 group-hover:text-slate-100 font-normal leading-relaxed line-clamp-2 pr-4">
+              &ldquo;{sample.query}&rdquo;
+            </p>
+
+            {/* Bottom Prompt Action Hint */}
+            <div className="mt-3 pt-2.5 border-t border-slate-800/60 flex items-center justify-between text-[11px] text-slate-400 group-hover:text-purple-300">
+              <span className="flex items-center gap-1.5">
+                <CornerDownRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-purple-400 transition-colors" />
+                <span>{language === "en-IN" ? "Test Query" : "प्रश्न पूछें"}</span>
+              </span>
+              <span className="opacity-0 group-hover:opacity-100 transition-opacity text-purple-400 font-medium">
+                Execute &rarr;
+              </span>
+            </div>
           </button>
         ))}
       </div>
     </div>
   );
 }
+
+

@@ -1,34 +1,41 @@
 @import "tailwindcss";
 
 @layer base {
+  :root {
+    --background: #080b13;
+    --foreground: #f1f5f9;
+    --card: #0f1422;
+    --card-foreground: #f1f5f9;
+    --primary: #8b5cf6;
+    --primary-foreground: #ffffff;
+    --border: #1e293b;
+    --muted: #64748b;
+  }
+
   * {
     box-sizing: border-box;
+    border-color: #1e293b;
   }
+
   body {
-    background-color: #030712;
-    color: #f3f4f6;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    background-color: #080b13;
+    color: #f1f5f9;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
 }
 
-/* HH Goa Cyber-Tropical Glow & Patterns */
-.bg-hh-grid {
-  background-size: 32px 32px;
+/* Background Cosmic Radial Glow */
+.bg-dashboard-glow {
   background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    radial-gradient(circle at 50% 15%, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.08) 35%, transparent 70%),
+    radial-gradient(circle at 90% 20%, rgba(168, 85, 247, 0.12) 0%, transparent 50%),
+    radial-gradient(circle at 10% 80%, rgba(59, 130, 246, 0.08) 0%, transparent 40%);
 }
 
-.hh-glow-cyan {
-  box-shadow: 0 0 25px -5px rgba(6, 182, 212, 0.25);
-}
-
-.hh-glow-emerald {
-  box-shadow: 0 0 25px -5px rgba(16, 185, 129, 0.25);
-}
-
-.hh-glow-sunset {
-  box-shadow: 0 0 25px -5px rgba(249, 115, 22, 0.25);
+.bg-dot-pattern {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+  background-size: 28px 28px;
 }
 
 /* Custom Sleek Scrollbar */
@@ -38,7 +45,7 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #090d16;
+  background: #080b13;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -50,17 +57,20 @@
   background: #334155;
 }
 
-@keyframes pulseGlow {
+/* Animations */
+@keyframes pulseSubtle {
   0%, 100% {
     opacity: 0.4;
     transform: scale(1);
   }
   50% {
-    opacity: 0.8;
-    transform: scale(1.05);
+    opacity: 0.9;
+    transform: scale(1.03);
   }
 }
 
-.animate-pulse-glow {
-  animation: pulseGlow 3s ease-in-out infinite;
+.animate-pulse-subtle {
+  animation: pulseSubtle 3s ease-in-out infinite;
 }
+
+

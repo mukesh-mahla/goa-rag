@@ -5,8 +5,10 @@ import {
   ChevronDown,
   ChevronUp,
   Database,
-  Search,
   CheckCircle2,
+  Layers,
+  Copy,
+  Check,
 } from "lucide-react";
 import { RagMatch } from "@/app/api/rag/route";
 
@@ -24,6 +26,7 @@ export default function PassageViewer({
   language = "hi-IN",
 }: PassageViewerProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
 
   if ((!matches || matches.length === 0) && !groundTruthAnswer) {
     return null;
@@ -32,16 +35,22 @@ export default function PassageViewer({
   const isEnglish = language === "en-IN";
   const displayGroundTruth = isEnglish ? groundTruthAnswerEn || groundTruthAnswer : groundTruthAnswer;
 
+  const handleCopy = (text: string, idx: number) => {
+    navigator.clipboard.writeText(text);
+    setCopiedIdx(idx);
+    setTimeout(() => setCopiedIdx(null), 1500);
+  };
+
   return (
     <div className="pt-2">
       {/* Clean Subtle Toggle Button */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-200 transition-colors font-medium py-1"
+        className="group flex items-center gap-2 text-xs font-mono text-slate-400 hover:text-purple-300 transition-colors py-1 cursor-pointer"
       >
-        <Search className="w-3.5 h-3.5 text-cyan-400" />
-        <span>
+        <span className="w-1.5 h-1.5 rounded-full bg-purple-500 group-hover:bg-purple-400 transition-colors" />
+        <span className="border-b border-dotted border-slate-700 pb-0.5">
           {isOpen
             ? isEnglish
               ? "Hide verified dataset sources"
@@ -51,23 +60,26 @@ export default function PassageViewer({
             : `${matches?.length || 0} सत्यापित स्रोत और डेटासेट उत्तर देखें`}
         </span>
         {isOpen ? (
-          <ChevronUp className="w-3.5 h-3.5" />
+          <ChevronUp className="w-3.5 h-3.5 text-slate-400 group-hover:text-white transition-colors" />
         ) : (
-          <ChevronDown className="w-3.5 h-3.5" />
+          <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-hover:text-white transition-colors" />
         )}
       </button>
 
       {/* Collapsible Content */}
       {isOpen && (
-        <div className="mt-3 p-3.5 rounded-xl bg-slate-950/70 border border-slate-800/80 space-y-3 text-xs animate-fade-in">
+        <div className="mt-2.5 p-3.5 rounded-xl bg-[#0b0f1a]/90 border border-slate-800 space-y-3 text-xs shadow-inner">
           {/* Ground Truth Answer */}
           {displayGroundTruth && (
-            <div className="space-y-1">
-              <span className="font-mono font-bold text-[11px] text-emerald-400 uppercase tracking-wider flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                {isEnglish ? "Ground Truth Dataset Answer:" : "डेटासेट का मूल उत्तर:"}
-              </span>
-              <p className="text-slate-200 bg-slate-900/90 p-2.5 rounded-lg border border-emerald-950 leading-relaxed">
+            <div className="space-y-1.5 border-b border-slate-800 pb-3">
+              <div className="flex items-center justify-between font-mono text-[10px]">
+                <span className="text-emerald-400 font-semibold uppercase tracking-wider flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                  {isEnglish ? "Ground Truth Dataset Answer:" : "डेटासेट का मूल उत्तर:"}
+                </span>
+                <span className="text-slate-500">100% GROUNDED</span>
+              </div>
+              <p className="text-slate-200 bg-[#080b13] p-3 rounded-lg border border-emerald-900/40 leading-relaxed font-sans text-xs">
                 {displayGroundTruth}
               </p>
             </div>
@@ -75,27 +87,49 @@ export default function PassageViewer({
 
           {/* Retrieved Context Passages */}
           {matches && matches.length > 0 && (
-            <div className="space-y-2 pt-1">
-              <span className="font-mono font-bold text-[11px] text-slate-400 uppercase tracking-wider block">
-                {isEnglish ? "Retrieved Passages:" : "प्रासंगिक संदर्भ:"}
-              </span>
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between font-mono text-[10px] text-slate-500">
+                <span className="uppercase font-semibold text-slate-400">
+                  {isEnglish ? "Retrieved Passages:" : "प्रासंगिक संदर्भ:"}
+                </span>
+                <span>Pinecone Index</span>
+              </div>
 
-              {matches.slice(0, 3).map((match, idx) => (
-                <div
-                  key={match.id || idx}
-                  className="p-2.5 rounded-lg bg-slate-900/60 border border-slate-800/60 space-y-1"
-                >
-                  <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
-                    <span>Source #{idx + 1}</span>
-                    <span className="text-cyan-400 font-bold">
-                      {((match.score || 0) * 100).toFixed(0)}% match
-                    </span>
+              {matches.slice(0, 3).map((match, idx) => {
+                const text = isEnglish && match.text_en ? match.text_en : match.text_hi || "";
+                return (
+                  <div
+                    key={match.id || idx}
+                    className="group relative p-3 rounded-lg bg-[#080b13] border border-slate-800/80 hover:border-purple-500/50 transition-colors space-y-1.5"
+                  >
+                    <div className="flex items-center justify-between text-[10px] font-mono">
+                      <div className="flex items-center gap-2">
+                        <span className="text-purple-400 font-semibold">Source #{idx + 1}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 rounded-full bg-purple-950/60 border border-purple-800/60 text-purple-300 font-medium">
+                          {((match.score || 0) * 100).toFixed(0)}% match
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleCopy(text, idx)}
+                          className="p-1 text-slate-500 hover:text-white transition-colors cursor-pointer"
+                          title="Copy passage"
+                        >
+                          {copiedIdx === idx ? (
+                            <Check className="w-3 h-3 text-emerald-400" />
+                          ) : (
+                            <Copy className="w-3 h-3" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                    <p className="text-slate-300 leading-relaxed text-[11px] font-sans">
+                      {text}
+                    </p>
                   </div>
-                  <p className="text-slate-300 leading-relaxed text-[11px]">
-                    {isEnglish && match.text_en ? match.text_en : match.text_hi}
-                  </p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -103,3 +137,4 @@ export default function PassageViewer({
     </div>
   );
 }
+

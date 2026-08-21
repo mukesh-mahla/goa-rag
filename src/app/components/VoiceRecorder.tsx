@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Mic, MicOff, Loader2, Languages } from "lucide-react";
+import { Mic, MicOff, Loader2 } from "lucide-react";
 
 interface VoiceRecorderProps {
   onTranscript: (text: string) => void;
@@ -221,80 +221,72 @@ export default function VoiceRecorder({
     }
   };
 
-  const pulseScale = isRecording ? 1 + Math.min(0.25, audioLevel / 200) : 1;
-
   return (
     <div className="flex items-center gap-2">
-      {/* Explicit Language Selector Dropdown / Toggle */}
-      <div className="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800">
+      {/* Segmented Language Switcher */}
+      <div className="flex items-center bg-[#131929] p-1 rounded-xl border border-slate-800">
         <button
           type="button"
           onClick={() => onLanguageChange("hi-IN")}
-          className={`text-[11px] font-mono px-2 py-1 rounded-lg transition-all ${
+          className={`text-[11px] font-medium px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
             selectedLanguage === "hi-IN"
-              ? "bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40"
-              : "text-slate-400 hover:text-slate-200"
+              ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold shadow-sm"
+              : "text-slate-400 hover:text-white"
           }`}
           title="Transcribe Voice in Hindi (hi-IN)"
         >
-          🇮🇳 हिन्दी
+          हिन्दी
         </button>
 
         <button
           type="button"
           onClick={() => onLanguageChange("en-IN")}
-          className={`text-[11px] font-mono px-2 py-1 rounded-lg transition-all ${
+          className={`text-[11px] font-medium px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
             selectedLanguage === "en-IN"
-              ? "bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40"
-              : "text-slate-400 hover:text-slate-200"
+              ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold shadow-sm"
+              : "text-slate-400 hover:text-white"
           }`}
           title="Transcribe Voice in English (en-IN)"
         >
-          🌐 EN
+          EN
         </button>
       </div>
 
-      {/* Mic Button */}
+      {/* Mic Action Button */}
       <div className="relative">
-        {isRecording && (
-          <div
-            className="absolute -inset-1.5 rounded-full bg-rose-500/30 animate-ping pointer-events-none"
-            style={{ animationDuration: "1.5s" }}
-          />
-        )}
-
         <button
           type="button"
           onClick={toggleRecording}
           disabled={disabled || isProcessing}
-          style={{ transform: `scale(${pulseScale})` }}
-          className={`relative p-3 rounded-xl font-bold transition-all duration-200 flex items-center justify-center ${
+          className={`relative p-2.5 rounded-xl text-xs transition-all duration-200 flex items-center justify-center cursor-pointer ${
             isRecording
-              ? "bg-rose-600 text-white ring-2 ring-rose-400 shadow-lg shadow-rose-600/40"
+              ? "bg-rose-500 text-white shadow-lg shadow-rose-500/40 animate-pulse"
               : isProcessing
               ? "bg-slate-800 text-slate-500 cursor-not-allowed"
-              : "bg-slate-900 hover:bg-slate-800 text-cyan-400 hover:text-cyan-300 border border-cyan-500/30 hover:border-cyan-400 shadow-md hover:scale-105 active:scale-95"
+              : "bg-[#131929] hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 hover:border-purple-500/50"
           }`}
-          title={isRecording ? "Stop Listening" : `Voice Input (${selectedLanguage === "hi-IN" ? "Hindi" : "English"})`}
+          title={isRecording ? "Stop Listening" : `Record voice query (${selectedLanguage === "hi-IN" ? "Hindi" : "English"})`}
         >
           {isProcessing ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Loader2 className="w-4 h-4 animate-spin text-purple-400" />
           ) : isRecording ? (
-            <MicOff className="w-4 h-4 animate-pulse" />
+            <MicOff className="w-4 h-4" />
           ) : (
-            <Mic className="w-4 h-4" />
+            <Mic className="w-4 h-4 text-purple-400 hover:text-purple-300" />
           )}
         </button>
       </div>
 
+      {/* Live Recording Pulsing Indicator */}
       {isRecording && (
-        <div className="flex items-center gap-1.5 text-xs text-rose-400 bg-rose-950/70 border border-rose-800/50 px-2.5 py-1 rounded-lg">
-          <div className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
-          <span className="font-mono text-[11px]">
-            Listening ({selectedLanguage === "hi-IN" ? "Hindi" : "English"})...
+        <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-rose-950/60 border border-rose-800/60 text-rose-200 animate-fade-in">
+          <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+          <span className="text-[11px] font-medium">
+            {selectedLanguage === "hi-IN" ? "ध्वनि सुन रहे हैं..." : "Listening..."}
           </span>
         </div>
       )}
     </div>
   );
 }
+

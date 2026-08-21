@@ -1,20 +1,9 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
-  title: "HH GOA // SST-RAG AI & Audio Navigator",
-  description: "Hacker House Goa Speech-to-Text RAG System with Pinecone Vector Database, Gemini QA & Audio Navigator",
+  title: "RAG Assistant // Your AI Knowledge Companion",
+  description: "Your AI assistant powered by Retrieval-Augmented Generation. Get accurate answers from your documents and knowledge base.",
 };
 
 export default function RootLayout({
@@ -23,13 +12,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
-    >
-      <body className="min-h-full flex flex-col bg-slate-950 text-slate-100 font-sans">
+    <html lang="en" className="dark h-full antialiased" style={{ colorScheme: "dark" }}>
+      <body className="min-h-full flex flex-col bg-[#080b13] text-slate-100 antialiased selection:bg-purple-900/50 selection:text-white">
         {children}
       </body>
     </html>
   );
 }
+

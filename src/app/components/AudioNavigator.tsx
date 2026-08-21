@@ -10,6 +10,7 @@ import {
   FastForward,
   Rewind,
   Loader2,
+  Sliders,
 } from "lucide-react";
 
 interface AudioNavigatorProps {
@@ -217,6 +218,12 @@ export default function AudioNavigator({
     if (audioRef.current) audioRef.current.currentTime = seekTime;
   };
 
+  const handleSpeedChange = (speed: number) => {
+    setPlaybackRate(speed);
+    if (audioRef.current) audioRef.current.playbackRate = speed;
+    if (synthRef.current) synthRef.current.rate = speed;
+  };
+
   const formatTime = (secs: number) => {
     const mins = Math.floor(secs / 60);
     const remainder = Math.floor(secs % 60);
@@ -224,58 +231,82 @@ export default function AudioNavigator({
   };
 
   return (
-    <div className="flex items-center gap-3 pt-2 mt-2 border-t border-slate-800/60 text-slate-300">
-      {/* Minimal Play/Pause Button */}
-      <button
-        type="button"
-        onClick={togglePlayPause}
-        disabled={isLoadingAudio}
-        className="p-2 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 transition-all flex items-center justify-center shrink-0"
-        title={isPlaying ? "Pause" : "Listen to answer"}
-      >
-        {isLoadingAudio ? (
-          <Loader2 className="w-4 h-4 animate-spin" />
-        ) : isPlaying ? (
-          <Pause className="w-4 h-4 fill-current" />
-        ) : (
-          <Play className="w-4 h-4 fill-current ml-0.5" />
-        )}
-      </button>
+    <div className="pt-2.5 mt-2 border-t border-slate-800/80 text-slate-300">
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-[#0b0f1a]/80 p-2.5 rounded-xl border border-slate-800">
+        {/* Left: Play/Pause Button */}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={togglePlayPause}
+            disabled={isLoadingAudio}
+            className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white transition-all flex items-center justify-center shrink-0 cursor-pointer shadow-md shadow-purple-500/20 disabled:opacity-40"
+            title={isPlaying ? "Pause" : "Listen to answer"}
+          >
+            {isLoadingAudio ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
+            ) : isPlaying ? (
+              <Pause className="w-3.5 h-3.5 fill-white text-white" />
+            ) : (
+              <Play className="w-3.5 h-3.5 fill-white text-white ml-0.5" />
+            )}
+          </button>
 
-      {/* Skip Controls */}
-      <button
-        type="button"
-        onClick={handleRewind}
-        className="text-[11px] font-mono px-1.5 py-1 rounded hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
-        title="Rewind 5s"
-      >
-        -5s
-      </button>
+          {/* Rewind / Fast Forward */}
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={handleRewind}
+              className="text-[11px] font-mono px-2 py-1 rounded-lg bg-slate-900/60 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
+              title="Rewind 5s"
+            >
+              -5s
+            </button>
+            <button
+              type="button"
+              onClick={handleFastForward}
+              className="text-[11px] font-mono px-2 py-1 rounded-lg bg-slate-900/60 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
+              title="Forward 5s"
+            >
+              +5s
+            </button>
+          </div>
+        </div>
 
-      {/* Progress Bar & Time */}
-      <div className="flex-1 flex items-center gap-2">
-        <input
-          type="range"
-          min="0"
-          max={duration || 100}
-          step="0.1"
-          value={currentTime}
-          onChange={handleSeek}
-          className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400 focus:outline-none"
-        />
-        <span className="font-mono text-[11px] text-slate-500 shrink-0">
-          {formatTime(currentTime)} / {formatTime(duration)}
-        </span>
+        {/* Center: Progress Bar & Time */}
+        <div className="flex-1 min-w-[140px] flex items-center gap-2.5">
+          <input
+            type="range"
+            min="0"
+            max={duration || 100}
+            step="0.1"
+            value={currentTime}
+            onChange={handleSeek}
+            className="w-full h-1.5 bg-slate-800 rounded-full appearance-none cursor-pointer accent-purple-500 focus:outline-none"
+          />
+          <span className="font-mono text-[11px] text-slate-400 shrink-0">
+            {formatTime(currentTime)} / {formatTime(duration)}
+          </span>
+        </div>
+
+        {/* Right: Speed Multipliers */}
+        <div className="flex items-center gap-1 bg-[#131929] p-0.5 rounded-lg border border-slate-800">
+          {[1.0, 1.25, 1.5, 2.0].map((rate) => (
+            <button
+              key={rate}
+              type="button"
+              onClick={() => handleSpeedChange(rate)}
+              className={`font-mono text-[10px] px-1.5 py-0.5 rounded transition-all cursor-pointer ${
+                playbackRate === rate
+                  ? "bg-purple-600 text-white font-bold"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              {rate}x
+            </button>
+          ))}
+        </div>
       </div>
-
-      <button
-        type="button"
-        onClick={handleFastForward}
-        className="text-[11px] font-mono px-1.5 py-1 rounded hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
-        title="Forward 5s"
-      >
-        +5s
-      </button>
     </div>
   );
 }
+
