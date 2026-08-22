@@ -16,9 +16,11 @@ import VoiceRecorder from "./components/VoiceRecorder";
 import DatasetSampleChips from "./components/DatasetSampleChips";
 import PassageViewer from "./components/PassageViewer";
 import HarnessTelemetryModal from "./components/HarnessTelemetryModal";
-import Prism from "./components/Prism";
+import dynamic from "next/dynamic";
 import { RagMatch } from "./api/rag/route";
 import { HarnessTimingTelemetry } from "./lib/ragHarness";
+
+const Prism = dynamic(() => import("./components/Prism"), { ssr: false });
 
 interface ChatMessage {
   id: string;
@@ -135,19 +137,17 @@ export default function Home() {
   return (
     <div className="min-h-screen relative isolate bg-black text-white font-sans selection:bg-cyan-500/30 selection:text-white flex flex-col justify-between overflow-x-hidden">
       {/* React Bits 3D Prism Shimmer Background */}
-      <div className="fixed inset-0 -z-10 pointer-events-none overflow-hidden flex items-center justify-center opacity-85">
+      <div className="fixed inset-0 -z-10 pointer-events-none w-full h-full overflow-hidden flex items-center justify-center">
         <Prism
-          animationType="3drotate"
-          timeScale={0.4}
+          animationType="rotate"
+          timeScale={0.5}
           height={3.5}
           baseWidth={5.5}
           scale={3.6}
           hueShift={0}
           colorFrequency={1}
-          noise={0.35}
-          glow={1.1}
-          bloom={1.2}
-          transparent={true}
+          noise={0.5}
+          glow={1}
         />
       </div>
 

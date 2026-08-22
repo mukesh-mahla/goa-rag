@@ -26,16 +26,16 @@ const Prism: React.FC<PrismProps> = ({
   height = 3.5,
   baseWidth = 5.5,
   animationType = "3drotate",
-  glow = 1,
+  glow = 1.0,
   offset = { x: 0, y: 0 },
-  noise = 0.5,
+  noise = 0.3,
   transparent = true,
   scale = 3.6,
   hueShift = 0,
   colorFrequency = 1,
   hoverStrength = 2,
   inertia = 0.05,
-  bloom = 1,
+  bloom = 1.0,
   suspendWhenOffscreen = false,
   timeScale = 0.5,
 }) => {
@@ -44,6 +44,11 @@ const Prism: React.FC<PrismProps> = ({
   useEffect(() => {
     const container = containerRef.current;
     if (!container || typeof window === "undefined") return;
+
+    // Clear any previous canvas in container
+    while (container.firstChild) {
+      container.removeChild(container.firstChild);
+    }
 
     const H = Math.max(0.001, height);
     const BW = Math.max(0.001, baseWidth);
@@ -65,11 +70,19 @@ const Prism: React.FC<PrismProps> = ({
     const INERT = Math.max(0, Math.min(1, inertia || 0.12));
 
     const dpr = Math.min(2, window.devicePixelRatio || 1);
-    const renderer = new Renderer({
-      dpr,
-      alpha: transparent,
-      antialias: false,
-    });
+    let renderer: Renderer;
+    try {
+      renderer = new Renderer({
+        dpr,
+        alpha: transparent,
+        antialias: false,
+        powerPreference: "high-performance",
+      });
+    } catch (e) {
+      console.warn("WebGL Renderer creation error:", e);
+      return;
+    }
+
     const gl = renderer.gl;
     gl.disable(gl.DEPTH_TEST);
     gl.disable(gl.CULL_FACE);
@@ -81,6 +94,7 @@ const Prism: React.FC<PrismProps> = ({
       width: "100%",
       height: "100%",
       display: "block",
+      pointerEvents: "none",
     });
     container.appendChild(gl.canvas);
 
@@ -117,7 +131,8 @@ const Prism: React.FC<PrismProps> = ({
       uniform float uTimeScale;
 
       vec4 tanh4(vec4 x){
-        vec4 e2x = exp(2.0*x);
+        vec4 cx = clamp(x, -20.0, 20.0);
+        vec4 e2x = exp(2.0 * cx);
         return (e2x - 1.0) / (e2x + 1.0);
       }
 
@@ -178,7 +193,7 @@ const Prism: React.FC<PrismProps> = ({
           wob = mat2(c0, c1, c2, c0);
         }
 
-        const int STEPS = 100;
+        const int STEPS = 80;
         for (int i = 0; i < STEPS; i++) {
           p = vec3(f, z);
           p.xz = p.xz * wob;
@@ -235,7 +250,7 @@ const Prism: React.FC<PrismProps> = ({
         uInvHeight: { value: 1 / H },
         uMinAxis: { value: Math.min(BASE_HALF, H) },
         uPxScale: {
-          value: 1 / ((gl.drawingBufferHeight || 1) * 0.1 * SCALE),
+          value: 1 / ((gl.drawingBufferHeight || window.innerHeight || 800) * 0.1 * SCALE),
         },
         uTimeScale: { value: TS },
       },
@@ -243,14 +258,15 @@ const Prism: React.FC<PrismProps> = ({
     const mesh = new Mesh(gl, { geometry, program });
 
     const resize = () => {
-      const w = container.clientWidth || 1;
-      const h = container.clientHeight || 1;
+      const w = container.clientWidth || window.innerWidth || 1;
+      const h = container.clientHeight || window.innerHeight || 1;
       renderer.setSize(w, h);
-      iResBuf[0] = gl.drawingBufferWidth;
-      iResBuf[1] = gl.drawingBufferHeight;
+      iResBuf[0] = gl.drawingBufferWidth || w;
+      iResBuf[1] = gl.drawingBufferHeight || h;
       offsetPxBuf[0] = offX * dpr;
       offsetPxBuf[1] = offY * dpr;
-      program.uniforms.uPxScale.value = 1 / ((gl.drawingBufferHeight || 1) * 0.1 * SCALE);
+      const effectiveH = gl.drawingBufferHeight || h;
+      program.uniforms.uPxScale.value = 1 / (effectiveH * 0.1 * SCALE);
     };
     const ro = new ResizeObserver(resize);
     ro.observe(container);
@@ -431,7 +447,9 @@ const Prism: React.FC<PrismProps> = ({
         if (io) io.disconnect();
         delete (container as any).__prismIO;
       }
-      if (gl.canvas.parentElement === container) container.removeChild(gl.canvas);
+      if (gl.canvas.parentElement === container) {
+        container.removeChild(gl.canvas);
+      }
     };
   }, [
     height,
