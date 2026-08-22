@@ -186,7 +186,7 @@ export async function executeRagHarness(
   try {
     queryEmbedding = await getEmbedding(query, "RETRIEVAL_QUERY");
   } catch (err: any) {
-    await new Promise((r) => setTimeout(r, 80));
+    await new Promise((r) => setTimeout(r, 60));
     queryEmbedding = await getEmbedding(query, "RETRIEVAL_QUERY");
   }
   embeddingMs = performance.now() - tStartEmb;
@@ -306,6 +306,7 @@ export async function executeRagHarness(
   // Stage 5: Context Reasoning & Fast Synthesis (Gemini 2.5 Flash)
   const tStartSyn = performance.now();
   let generatedAnswer = "";
+  let usedGroundTruthDirectly = false;
 
   const contextPrompt = (matches || [])
     .slice(0, 3)
@@ -353,11 +354,19 @@ Rules:
         temperature: 0.1,
       },
     });
-    generatedAnswer = modelResponse.text?.trim() || strictRefusal;
+    generatedAnswer = modelResponse.text?.trim() || "";
   } catch (synError) {
-    console.error("Gemini synthesis error:", synError);
-    generatedAnswer = strictRefusal;
+    console.warn("Gemini synthesis notice:", synError);
+    // If Gemini rate-limited or errored, check if high-scoring ground truth exists in Pinecone metadata
+    const groundTruth = isEnglish ? (bestMatch?.answer_en || bestMatch?.answer) : (bestMatch?.answer || bestMatch?.answer_en);
+    if (topScore >= 0.60 && groundTruth && groundTruth.trim()) {
+      generatedAnswer = groundTruth.trim();
+      usedGroundTruthDirectly = true;
+    } else {
+      generatedAnswer = strictRefusal;
+    }
   }
+
   synthesisMs = performance.now() - tStartSyn;
 
   // Stage 6: Post-Execution Grounding Guardrail (< 1ms)
@@ -378,15 +387,16 @@ Rules:
 
   const answerLower = generatedAnswer.toLowerCase();
   const isRefusal =
-    answerLower.includes("not present") ||
-    answerLower.includes("not available") ||
-    answerLower.includes("does not contain") ||
-    answerLower.includes("does not mention") ||
-    answerLower.includes("उपलब्ध नहीं") ||
-    answerLower.includes("डेटासेट में") ||
-    answerLower.includes("संदर्भ में");
+    !usedGroundTruthDirectly &&
+    (answerLower.includes("not present") ||
+      answerLower.includes("not available") ||
+      answerLower.includes("does not contain") ||
+      answerLower.includes("does not mention") ||
+      answerLower.includes("उपलब्ध नहीं") ||
+      answerLower.includes("डेटासेट में") ||
+      answerLower.includes("संदर्भ में"));
 
-  if (isRefusal || !groundingCheck.passed) {
+  if ((isRefusal || !groundingCheck.passed) && !usedGroundTruthDirectly) {
     if (allowFallbackLLM) {
       // User explicitly opted to receive LLM answer with partial context
       const tStartFb = performance.now();
