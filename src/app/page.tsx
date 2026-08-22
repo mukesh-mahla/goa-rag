@@ -16,6 +16,7 @@ import VoiceRecorder from "./components/VoiceRecorder";
 import DatasetSampleChips from "./components/DatasetSampleChips";
 import PassageViewer from "./components/PassageViewer";
 import HarnessTelemetryModal from "./components/HarnessTelemetryModal";
+import Prism from "./components/Prism";
 import { RagMatch } from "./api/rag/route";
 import { HarnessTimingTelemetry } from "./lib/ragHarness";
 
@@ -42,52 +43,6 @@ export default function Home() {
   const [isTelemetryModalOpen, setIsTelemetryModalOpen] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
-  const vantaRef = useRef<HTMLDivElement | null>(null);
-  const vantaEffectRef = useRef<any>(null);
-
-  // Initialize Vanta 3D Cells Effect (Open Source, Zero Watermarks)
-  useEffect(() => {
-    const initVanta = () => {
-      if (
-        !vantaEffectRef.current &&
-        vantaRef.current &&
-        typeof window !== "undefined" &&
-        (window as any).VANTA &&
-        (window as any).VANTA.CELLS
-      ) {
-        try {
-          vantaEffectRef.current = (window as any).VANTA.CELLS({
-            el: vantaRef.current,
-            mouseControls: true,
-            touchControls: true,
-            gyroControls: false,
-            minHeight: 200.00,
-            minWidth: 200.00,
-            scale: 1.00,
-            color1: 0x34a4d4,
-            color2: 0x267af2,
-            size: 0.20,
-            speed: 2.20,
-          });
-        } catch (e) {
-          console.warn("Vanta init warning:", e);
-        }
-      }
-    };
-
-    initVanta();
-    const timer = setTimeout(initVanta, 300);
-
-    return () => {
-      clearTimeout(timer);
-      if (vantaEffectRef.current) {
-        try {
-          vantaEffectRef.current.destroy();
-        } catch (e) {}
-        vantaEffectRef.current = null;
-      }
-    };
-  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -179,8 +134,22 @@ export default function Home() {
 
   return (
     <div className="min-h-screen relative isolate bg-black text-white font-sans selection:bg-cyan-500/30 selection:text-white flex flex-col justify-between overflow-x-hidden">
-      {/* Interactive 3D Vanta Dots Background */}
-      <div ref={vantaRef} className="fixed inset-0 -z-10 pointer-events-none" />
+      {/* React Bits 3D Prism Shimmer Background */}
+      <div className="fixed inset-0 -z-10 pointer-events-none overflow-hidden flex items-center justify-center opacity-85">
+        <Prism
+          animationType="3drotate"
+          timeScale={0.4}
+          height={3.5}
+          baseWidth={5.5}
+          scale={3.6}
+          hueShift={0}
+          colorFrequency={1}
+          noise={0.35}
+          glow={1.1}
+          bloom={1.2}
+          transparent={true}
+        />
+      </div>
 
       {/* Top Header: Clean, boxless, no top-left text, actions aligned on right */}
       <header className="relative z-20 max-w-5xl w-full mx-auto px-4 sm:px-6 pt-4 sm:pt-6 pb-2 flex items-center justify-end gap-2">
@@ -224,7 +193,7 @@ export default function Home() {
                   lineHeight: 1.05,
                   letterSpacing: "-0.04em",
                 }}
-                className="text-4xl sm:text-6xl md:text-[72px] text-white"
+                className="text-4xl sm:text-6xl md:text-[72px] text-white drop-shadow-2xl"
               >
                 Ask. Explore. Discover.
               </h1>
@@ -241,7 +210,7 @@ export default function Home() {
             >
               {/* AI Avatar */}
               {msg.role === "assistant" && (
-                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white/10 border border-white/15 p-1 shrink-0 mt-0.5 flex items-center justify-center text-cyan-400 shadow-sm">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white/10 border border-white/15 p-1 shrink-0 mt-0.5 flex items-center justify-center text-cyan-400 shadow-sm backdrop-blur-xl">
                   <Bot className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </div>
               )}
@@ -275,7 +244,7 @@ export default function Home() {
                       <div className="flex flex-wrap items-center justify-between gap-1.5 sm:gap-2 pb-2 border-b border-white/10 text-[11px] sm:text-xs font-mono">
                         <div className="flex items-center gap-1.5">
                           <span className="flex items-center gap-1 text-cyan-400 font-bold">
-                            <Activity className="w-3 h-3 text-cyan-400" />
+                            <Activity className="w-3.5 h-3.5 text-cyan-400" />
                             Generation: {msg.telemetry.totalMs}ms
                           </span>
                           <span className="text-neutral-600">&bull;</span>
@@ -317,7 +286,7 @@ export default function Home() {
 
               {/* User Avatar */}
               {msg.role === "user" && (
-                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white/10 border border-white/15 p-1 shrink-0 mt-0.5 flex items-center justify-center text-white shadow-sm">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white/10 border border-white/15 p-1 shrink-0 mt-0.5 flex items-center justify-center text-white shadow-sm backdrop-blur-xl">
                   <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </div>
               )}
@@ -327,7 +296,7 @@ export default function Home() {
           {/* Loading State */}
           {isLoading && (
             <div className="flex gap-2 sm:gap-3 items-center animate-fade-in">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white/10 border border-white/15 p-1 shrink-0 flex items-center justify-center text-cyan-400">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white/10 border border-white/15 p-1 shrink-0 flex items-center justify-center text-cyan-400 backdrop-blur-xl">
                 <Bot className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
               <div className="px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-2xl stitch-glass text-xs font-mono text-cyan-300 flex items-center gap-2 shadow-lg">

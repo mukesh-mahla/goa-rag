@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -25,16 +24,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} dark h-full antialiased`} style={{ colorScheme: "dark" }}>
-      <head>
-        <Script
-          src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"
-          strategy="beforeInteractive"
-        />
-        <Script
-          src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.cells.min.js"
-          strategy="beforeInteractive"
-        />
-      </head>
       <body className="min-h-full flex flex-col bg-black text-white font-sans antialiased selection:bg-cyan-500/30 selection:text-white relative">
         {children}
       </body>
