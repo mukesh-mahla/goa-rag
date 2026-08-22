@@ -10,6 +10,7 @@ import {
   Activity,
   ArrowUp,
   Plus,
+  Sparkles,
 } from "lucide-react";
 import AudioNavigator from "./components/AudioNavigator";
 import VoiceRecorder from "./components/VoiceRecorder";
@@ -26,9 +27,11 @@ interface ChatMessage {
   id: string;
   role: "user" | "assistant";
   content: string;
+  query?: string;
   timestamp: string;
   isVoice?: boolean;
   matched?: boolean;
+  isFallbackLLM?: boolean;
   topScore?: number;
   datasetAnswer?: string | null;
   datasetAnswerEn?: string | null;
@@ -42,6 +45,7 @@ export default function Home() {
   const [inputQuery, setInputQuery] = useState("");
   const [selectedLanguage, setSelectedLanguage] = useState<"hi-IN" | "en-IN">("hi-IN");
   const [isLoading, setIsLoading] = useState(false);
+  const [fallbackLoadingId, setFallbackLoadingId] = useState<string | null>(null);
   const [isTelemetryModalOpen, setIsTelemetryModalOpen] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
@@ -65,6 +69,7 @@ export default function Home() {
         id: userMessageId,
         role: "user",
         content: text,
+        query: text,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         isVoice: fromVoice,
         language: selectedLanguage,
@@ -93,8 +98,10 @@ export default function Home() {
         id: (Date.now() + 1).toString(),
         role: "assistant",
         content: data.answer,
+        query: text,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         matched: data.matched,
+        isFallbackLLM: data.isFallbackLLM || false,
         topScore: data.topScore,
         datasetAnswer: data.datasetAnswer,
         datasetAnswerEn: data.datasetAnswerEn,
@@ -113,6 +120,7 @@ export default function Home() {
           selectedLanguage === "en-IN"
             ? "Error processing query. Please try again."
             : "प्रश्न संसाधित करने में त्रुटि हुई। कृपया पुनः प्रयास करें।",
+        query: text,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         matched: false,
         topScore: 0,
@@ -121,6 +129,49 @@ export default function Home() {
       setMessages([...newMessages, errorMessage]);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleGenerateFallback = async (msg: ChatMessage) => {
+    const queryText = msg.query || (messages.find((m, i) => i === messages.findIndex(x => x.id === msg.id) - 1)?.content) || "";
+    if (!queryText || fallbackLoadingId) return;
+
+    setFallbackLoadingId(msg.id);
+
+    try {
+      const res = await fetch("/api/rag", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: queryText,
+          topK: 3,
+          language: msg.language || selectedLanguage,
+          allowFallbackLLM: true,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to generate fallback answer.");
+      const data = await res.json();
+
+      setMessages((prev) =>
+        prev.map((m) => {
+          if (m.id === msg.id) {
+            return {
+              ...m,
+              content: data.answer,
+              matched: false,
+              isFallbackLLM: true,
+              telemetry: data.telemetry,
+              retrievedMatches: data.retrievedMatches || m.retrievedMatches,
+            };
+          }
+          return m;
+        })
+      );
+    } catch (err) {
+      console.error("Fallback generation error:", err);
+    } finally {
+      setFallbackLoadingId(null);
     }
   };
 
@@ -244,12 +295,16 @@ export default function Home() {
                       <div className="flex flex-wrap items-center justify-between gap-1.5 sm:gap-2 pb-2 border-b border-white/10 text-[11px] sm:text-xs font-mono">
                         <div className="flex items-center gap-1.5">
                           <span className="flex items-center gap-1 text-cyan-400 font-bold">
-                            <Activity className="w-3.5 h-3.5 text-cyan-400" />
+                            <Activity className="w-3 h-3 text-cyan-400" />
                             Generation: {msg.telemetry.totalMs}ms
                           </span>
                           <span className="text-neutral-600">&bull;</span>
                           <span className="text-neutral-400 text-[10px] sm:text-[11px]">
-                            {msg.matched ? "Verified Ground Truth" : "Refusal"}
+                            {msg.isFallbackLLM
+                              ? "✨ AI Synthesized (Partial Context)"
+                              : msg.matched
+                              ? "Verified Ground Truth"
+                              : "Refusal (Not in Dataset)"}
                           </span>
                         </div>
 
@@ -263,6 +318,39 @@ export default function Home() {
                     <div className="text-sm sm:text-base leading-relaxed text-neutral-100 font-normal">
                       {msg.content}
                     </div>
+
+                    {/* Fallback Option Prompt: Appears when answer is NOT in dataset */}
+                    {!msg.matched && !msg.isFallbackLLM && (
+                      <div className="mt-2.5 p-3 rounded-2xl bg-white/[0.04] border border-cyan-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 animate-fade-in">
+                        <div className="space-y-0.5">
+                          <span className="text-xs font-semibold text-cyan-300 flex items-center gap-1.5">
+                            <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                            {msg.language === "en-IN" ? "Not found in dataset" : "डेटासेट में उपलब्ध नहीं"}
+                          </span>
+                          <p className="text-[11px] text-neutral-400 leading-normal">
+                            {msg.language === "en-IN"
+                              ? "Get an AI answer combining closest partial dataset context with general knowledge."
+                              : "निकटतम आंशिक संदर्भ और सामान्य ज्ञान का उपयोग करके AI उत्तर प्राप्त करें।"}
+                          </p>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => handleGenerateFallback(msg)}
+                          disabled={fallbackLoadingId === msg.id}
+                          className="px-3.5 py-1.5 rounded-full bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-xs font-medium text-cyan-200 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95 shrink-0"
+                        >
+                          {fallbackLoadingId === msg.id ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin text-cyan-300" />
+                          ) : (
+                            <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                          )}
+                          <span>
+                            {msg.language === "en-IN" ? "Answer with Partial Context" : "आंशिक संदर्भ से AI उत्तर लें"}
+                          </span>
+                        </button>
+                      </div>
+                    )}
 
                     {/* Audio Navigator Player */}
                     <AudioNavigator

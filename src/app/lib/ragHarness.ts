@@ -30,6 +30,7 @@ export interface HarnessTimingTelemetry {
 export interface StructuredHarnessOutput {
   answer: string;
   matched: boolean;
+  isFallbackLLM?: boolean;
   topScore: number;
   datasetAnswer: string | null;
   datasetAnswerEn: string | null;
@@ -50,10 +51,75 @@ function detectIsEnglish(query: string, requestedLang?: "hi-IN" | "en-IN"): bool
   return latinCount > devanagariCount;
 }
 
+/**
+ * Synthesizes an answer using Gemini 2.5 Flash general knowledge augmented with available partial dataset context.
+ */
+async function synthesizeWithPartialContext(
+  query: string,
+  matches: any[],
+  isEnglish: boolean
+): Promise<string> {
+  const partialContext = (matches || [])
+    .slice(0, 3)
+    .map((m: any, idx: number) => {
+      if (isEnglish) {
+        return `[Partial Match ${idx + 1}] (Relevance: ${(m.score * 100).toFixed(0)}%)
+Query: ${m.query_en || m.query || "N/A"}
+Passage: ${m.text_en || m.text_hi || "N/A"}`;
+      }
+      return `[आंशिक मिलान ${idx + 1}] (प्रासंगिकता: ${(m.score * 100).toFixed(0)}%)
+प्रश्न: ${m.query || "N/A"}
+संदर्भ: ${m.text_hi || "N/A"}`;
+    })
+    .join("\n\n---\n\n");
+
+  const systemPrompt = isEnglish
+    ? `You are an intelligent, helpful AI assistant.
+The user asked: "${query}"
+This specific question is not directly covered in the verified dataset. However, closest partial context from the dataset is provided below.
+
+Instructions:
+1. Examine the partial context if it provides useful background details, terminology, or related facts.
+2. Use your comprehensive general knowledge to provide an accurate, clear, and direct answer to the user's question.
+3. Respond in natural English. Keep the answer informative yet concise.`
+    : `आप एक अत्यंत बुद्धिमान और सहायक AI सहायक हैं।
+उपयोगकर्ता का प्रश्न: "${query}"
+यह प्रश्न सीधे तौर पर डेटासेट में मौजूद नहीं था, लेकिन संबंधित आंशिक संदर्भ नीचे दिया गया है।
+
+निर्देश:
+1. यदि आंशिक संदर्भ में कोई उपयोगी पृष्ठभूमि जानकारी है तो उसका लाभ उठाएं।
+2. अपने व्यापक सामान्य ज्ञान का उपयोग करके उपयोगकर्ता के प्रश्न का सटीक, स्पष्ट और ज्ञानवर्धक उत्तर दें।
+3. उत्तर स्वाभाविक, सरल और संक्षिप्त हिंदी में दें।`;
+
+  const userPrompt = `Partial Dataset Context:\n${partialContext || "None"}\n\nUser Question: ${query}\n\nAnswer:`;
+
+  try {
+    const modelResponse = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: [
+        {
+          role: "user",
+          parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }],
+        },
+      ],
+      config: {
+        maxOutputTokens: 260,
+        temperature: 0.3,
+      },
+    });
+
+    return modelResponse.text?.trim() || (isEnglish ? "Unable to generate an answer at this time." : "इस समय उत्तर तैयार करने में असमर्थ।");
+  } catch (err) {
+    console.error("Partial context synthesis error:", err);
+    return isEnglish ? "Unable to generate an answer at this time." : "इस समय उत्तर तैयार करने में असमर्थ।";
+  }
+}
+
 export async function executeRagHarness(
   rawQuery: string,
   topK = 3,
-  requestedLanguage: "hi-IN" | "en-IN" = "hi-IN"
+  requestedLanguage: "hi-IN" | "en-IN" = "hi-IN",
+  allowFallbackLLM = false
 ): Promise<StructuredHarnessOutput> {
   // Pure RAG Generation latency timer starts here
   const tStartTotal = performance.now();
@@ -86,6 +152,7 @@ export async function executeRagHarness(
         ? "Invalid or unsafe input rejected by safety guardrail."
         : "असुरक्षित या अमान्य इनपुट (Unsafe input rejected).",
       matched: false,
+      isFallbackLLM: false,
       topScore: 0,
       datasetAnswer: null,
       datasetAnswerEn: null,
@@ -164,11 +231,13 @@ export async function executeRagHarness(
   checks.push(domainCheck);
   guardrailMs += performance.now() - tStartG2;
 
-  if (!domainCheck.passed) {
+  // If domain check failed and fallback is NOT allowed, return strict refusal
+  if (!domainCheck.passed && !allowFallbackLLM) {
     const totalMs = performance.now() - tStartTotal;
     return {
       answer: strictRefusal,
       matched: false,
+      isFallbackLLM: false,
       topScore,
       datasetAnswer: null,
       datasetAnswerEn: null,
@@ -196,7 +265,45 @@ export async function executeRagHarness(
     };
   }
 
-  // Stage 5: Context Reasoning & Fast Synthesis (Gemini 2.5 Flash with token optimization)
+  // If domain check failed but fallback IS allowed:
+  if (!domainCheck.passed && allowFallbackLLM) {
+    const tStartSyn = performance.now();
+    const fallbackAnswer = await synthesizeWithPartialContext(query, matches, isEnglish);
+    synthesisMs = performance.now() - tStartSyn;
+    const totalMs = performance.now() - tStartTotal;
+
+    return {
+      answer: fallbackAnswer,
+      matched: false,
+      isFallbackLLM: true,
+      topScore,
+      datasetAnswer: null,
+      datasetAnswerEn: null,
+      datasetQuery: null,
+      datasetQueryId: null,
+      retrievedMatches: matches || [],
+      guardrailReport: {
+        isSafe: true,
+        isDomainRelevant: false,
+        isGrounded: false,
+        finalDecision: "SERVE_ANSWER",
+        refusalMessage: undefined,
+        checks,
+      },
+      telemetry: {
+        totalMs: Math.round(totalMs),
+        embeddingMs: Math.round(embeddingMs),
+        retrievalMs: Math.round(retrievalMs),
+        guardrailMs: Math.round(guardrailMs),
+        synthesisMs: Math.round(synthesisMs),
+        verificationMs: 0,
+      },
+      query,
+      language: activeLanguage,
+    };
+  }
+
+  // Stage 5: Context Reasoning & Fast Synthesis (Gemini 2.5 Flash)
   const tStartSyn = performance.now();
   let generatedAnswer = "";
 
@@ -267,6 +374,7 @@ Rules:
   let finalAnswer = generatedAnswer;
   let finalDecision: GuardrailAuditReport["finalDecision"] = "SERVE_ANSWER";
   let isMatched = true;
+  let isFallbackLLM = false;
 
   const answerLower = generatedAnswer.toLowerCase();
   const isRefusal =
@@ -278,14 +386,21 @@ Rules:
     answerLower.includes("डेटासेट में") ||
     answerLower.includes("संदर्भ में");
 
-  if (isRefusal) {
-    finalAnswer = strictRefusal;
-    finalDecision = "REFUSE_OUT_OF_DOMAIN";
-    isMatched = false;
-  } else if (!groundingCheck.passed) {
-    finalAnswer = strictRefusal;
-    finalDecision = "REFUSE_UNGROUNDED";
-    isMatched = false;
+  if (isRefusal || !groundingCheck.passed) {
+    if (allowFallbackLLM) {
+      // User explicitly opted to receive LLM answer with partial context
+      const tStartFb = performance.now();
+      finalAnswer = await synthesizeWithPartialContext(query, matches, isEnglish);
+      synthesisMs += performance.now() - tStartFb;
+      finalDecision = "SERVE_ANSWER";
+      isMatched = false;
+      isFallbackLLM = true;
+    } else {
+      finalAnswer = strictRefusal;
+      finalDecision = isRefusal ? "REFUSE_OUT_OF_DOMAIN" : "REFUSE_UNGROUNDED";
+      isMatched = false;
+      isFallbackLLM = false;
+    }
   }
 
   const totalMs = performance.now() - tStartTotal;
@@ -293,6 +408,7 @@ Rules:
   return {
     answer: finalAnswer,
     matched: isMatched,
+    isFallbackLLM,
     topScore,
     datasetAnswer: isMatched ? (bestMatch?.answer || null) : null,
     datasetAnswerEn: isMatched ? (bestMatch?.answer_en || null) : null,
@@ -301,9 +417,10 @@ Rules:
     retrievedMatches: matches || [],
     guardrailReport: {
       isSafe: true,
-      isDomainRelevant: isMatched,
-      isGrounded: groundingCheck.passed,
+      isDomainRelevant: domainCheck.passed,
+      isGrounded: isMatched,
       finalDecision,
+      refusalMessage: isMatched || isFallbackLLM ? undefined : (isRefusal ? domainCheck.reason : groundingCheck.reason),
       checks,
     },
     telemetry: {

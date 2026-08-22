@@ -21,6 +21,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const query = body.query?.trim();
     const language = (body.language as "hi-IN" | "en-IN") || "hi-IN";
+    const allowFallbackLLM = Boolean(body.allowFallbackLLM);
 
     if (!query) {
       return NextResponse.json(
@@ -29,10 +30,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const topK = body.topK ? Math.min(Math.max(Number(body.topK), 1), 10) : 5;
+    const topK = body.topK ? Math.min(Math.max(Number(body.topK), 1), 10) : 3;
 
     // Run query through structured Model Harness with multi-layer guardrails
-    const result = await executeRagHarness(query, topK, language);
+    const result = await executeRagHarness(query, topK, language, allowFallbackLLM);
 
     return NextResponse.json(result);
   } catch (error: any) {
