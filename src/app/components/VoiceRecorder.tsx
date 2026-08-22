@@ -18,7 +18,6 @@ export default function VoiceRecorder({
 }: VoiceRecorderProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [interimText, setInterimText] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [audioLevel, setAudioLevel] = useState<number>(0);
 
@@ -29,6 +28,8 @@ export default function VoiceRecorder({
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animFrameRef = useRef<number | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const latestTranscriptRef = useRef<string>("");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -53,15 +54,33 @@ export default function VoiceRecorder({
             }
           }
 
-          if (currentInterim) {
-            setInterimText(currentInterim);
+          const currentText = (finalTranscript || currentInterim).trim();
+          if (currentText) {
+            latestTranscriptRef.current = currentText;
+
+            // Reset Silence VAD Timer: If user stops speaking for 1.4s, auto-commit & stop recording
+            if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+            silenceTimerRef.current = setTimeout(() => {
+              autoFinishAndSend();
+            }, 1400);
           }
 
-          if (finalTranscript) {
-            const trimmed = finalTranscript.trim();
-            setInterimText(trimmed);
-            onTranscript(trimmed);
+          // If speech recognition flagged it as a completed final phrase, auto finish
+          if (finalTranscript && finalTranscript.trim()) {
+            latestTranscriptRef.current = finalTranscript.trim();
+            if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+            silenceTimerRef.current = setTimeout(() => {
+              autoFinishAndSend();
+            }, 600);
           }
+        };
+
+        recognition.onspeechend = () => {
+          // Triggered when acoustic speech pause is detected
+          if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+          silenceTimerRef.current = setTimeout(() => {
+            autoFinishAndSend();
+          }, 700);
         };
 
         recognition.onerror = (event: any) => {
@@ -73,10 +92,9 @@ export default function VoiceRecorder({
         };
 
         recognition.onend = () => {
-          if (isRecording) {
-            try {
-              recognition.start();
-            } catch (e) {}
+          // If stopped, make sure state is clean
+          if (isRecording && latestTranscriptRef.current) {
+            autoFinishAndSend();
           }
         };
 
@@ -88,6 +106,17 @@ export default function VoiceRecorder({
       stopRecording();
     };
   }, [selectedLanguage]);
+
+  const autoFinishAndSend = () => {
+    const textToSend = latestTranscriptRef.current.trim();
+    if (textToSend) {
+      stopRecording();
+      latestTranscriptRef.current = "";
+      onTranscript(textToSend);
+    } else {
+      stopRecording();
+    }
+  };
 
   const startAudioVisualizer = (stream: MediaStream) => {
     try {
@@ -124,8 +153,9 @@ export default function VoiceRecorder({
 
   const startRecording = async () => {
     setErrorMessage(null);
-    setInterimText("");
+    latestTranscriptRef.current = "";
     audioChunksRef.current = [];
+    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -158,8 +188,9 @@ export default function VoiceRecorder({
     }
   };
 
-  const stopRecording = async () => {
+  const stopRecording = () => {
     setIsRecording(false);
+    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
 
     if (recognitionRef.current) {
       try {
@@ -181,8 +212,9 @@ export default function VoiceRecorder({
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
       mediaRecorderRef.current.stop();
 
+      // Fallback STT if speechRecognition didn't produce text
       setTimeout(async () => {
-        if (audioChunksRef.current.length > 0 && !interimText) {
+        if (audioChunksRef.current.length > 0 && !latestTranscriptRef.current) {
           setIsProcessing(true);
           try {
             const audioBlob = new Blob(audioChunksRef.current, { type: "audio/wav" });
@@ -197,9 +229,8 @@ export default function VoiceRecorder({
 
             if (res.ok) {
               const data = await res.json();
-              if (data.transcript) {
-                setInterimText(data.transcript);
-                onTranscript(data.transcript);
+              if (data.transcript && data.transcript.trim()) {
+                onTranscript(data.transcript.trim());
               }
             }
           } catch (e) {
@@ -208,14 +239,14 @@ export default function VoiceRecorder({
             setIsProcessing(false);
           }
         }
-      }, 300);
+      }, 250);
     }
   };
 
   const toggleRecording = () => {
     if (disabled || isProcessing) return;
     if (isRecording) {
-      stopRecording();
+      autoFinishAndSend();
     } else {
       startRecording();
     }
@@ -264,7 +295,11 @@ export default function VoiceRecorder({
             ? "bg-white/10 text-neutral-500 cursor-not-allowed"
             : "text-neutral-400 hover:text-white hover:bg-white/10"
         }`}
-        title={isRecording ? "Stop Recording" : `Record voice query (${selectedLanguage === "hi-IN" ? "Hindi" : "English"})`}
+        title={
+          isRecording
+            ? "Listening... Click to finish"
+            : `Record voice query (${selectedLanguage === "hi-IN" ? "Hindi" : "English"})`
+        }
       >
         {isProcessing ? (
           <Loader2 className="w-4 h-4 animate-spin text-white" />
@@ -287,4 +322,3 @@ export default function VoiceRecorder({
     </div>
   );
 }
-

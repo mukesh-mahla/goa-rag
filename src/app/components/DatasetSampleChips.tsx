@@ -83,18 +83,18 @@ export default function DatasetSampleChips({
   const samples = language === "en-IN" ? SAMPLE_QUERIES_EN : SAMPLE_QUERIES_HI;
 
   return (
-    <div className="w-full flex flex-wrap items-center justify-center gap-2.5 pt-2">
+    <div className="w-full flex items-center overflow-x-auto no-scrollbar py-1 gap-2 sm:gap-2.5 sm:flex-wrap sm:justify-center scroll-smooth -mx-1 px-1">
       {samples.map((sample, idx) => (
         <button
           key={idx}
           type="button"
           disabled={disabled}
           onClick={() => onSelectQuery(sample.query)}
-          className="group stitch-pill px-4 py-2 rounded-full text-xs text-neutral-300 hover:text-white flex items-center gap-2 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-sm max-w-full truncate"
+          className="group stitch-pill px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs text-neutral-300 hover:text-white flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-sm shrink-0 active:scale-95 touch-manipulation"
           title={sample.query}
         >
-          <Sparkles className="w-3.5 h-3.5 text-cyan-400 group-hover:text-white transition-colors shrink-0" />
-          <span className="truncate font-normal">
+          <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-cyan-400 group-hover:text-white transition-colors shrink-0" />
+          <span className="whitespace-nowrap font-normal text-[11px] sm:text-xs">
             {sample.label}
           </span>
         </button>
@@ -102,5 +102,3 @@ export default function DatasetSampleChips({
     </div>
   );
 }
-
-

@@ -1,10 +1,21 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
-  title: "SST-RAG // Voice & Multimodal Verified Retrieval",
-  description: "Transform spoken and text queries into sub-200ms grounded answers from Pinecone MS-MARCO dataset.",
+  title: "Hacker House Goa STT RAG Model",
+  description: "Transform spoken and text queries into grounded, verified answers with live latency tracking and multi-layer guardrails.",
 };
 
 export default function RootLayout({
@@ -13,16 +24,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark h-full antialiased" style={{ colorScheme: "dark" }}>
-      <body className="min-h-full flex flex-col bg-black text-white antialiased selection:bg-cyan-500/30 selection:text-white relative">
-        {children}
-        {/* Runtime — load once per app */}
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} dark h-full antialiased`} style={{ colorScheme: "dark" }}>
+      <head>
         <Script
-          src="https://cdn.aidesigner.ai/effects/runtime/v1.js"
-          strategy="afterInteractive"
+          src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"
+          strategy="beforeInteractive"
         />
+        <Script
+          src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.cells.min.js"
+          strategy="beforeInteractive"
+        />
+      </head>
+      <body className="min-h-full flex flex-col bg-black text-white font-sans antialiased selection:bg-cyan-500/30 selection:text-white relative">
+        {children}
       </body>
     </html>
   );
 }
-

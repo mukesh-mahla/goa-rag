@@ -1,7 +1,7 @@
 /**
- * Model Harness & Pipeline Orchestrator for Multilingual SST-RAG
+ * Model Harness & Pipeline Orchestrator for Hacker House Goa STT RAG Model
  * Provides genuine LLM reasoning, strict contextual grounding, and multi-layer guardrails.
- * No fake shortcuts or naive answer-dumping.
+ * Measures pure RAG generation latency from user query to verified response.
  */
 
 import { GoogleGenAI } from "@google/genai";
@@ -52,9 +52,10 @@ function detectIsEnglish(query: string, requestedLang?: "hi-IN" | "en-IN"): bool
 
 export async function executeRagHarness(
   rawQuery: string,
-  topK = 5,
+  topK = 3,
   requestedLanguage: "hi-IN" | "en-IN" = "hi-IN"
 ): Promise<StructuredHarnessOutput> {
+  // Pure RAG Generation latency timer starts here
   const tStartTotal = performance.now();
   const checks: GuardrailCheckResult[] = [];
 
@@ -72,7 +73,7 @@ export async function executeRagHarness(
     ? "This information is not present in the dataset."
     : "यह जानकारी डेटासेट में उपलब्ध नहीं है।";
 
-  // Stage 1: Input Safety Guardrail
+  // Stage 1: Input Safety Guardrail (< 1ms)
   const tStartG1 = performance.now();
   const safetyCheck = checkInputSafety(query);
   checks.push(safetyCheck);
@@ -112,18 +113,18 @@ export async function executeRagHarness(
     };
   }
 
-  // Stage 2: Query Embedding Generation
+  // Stage 2: Query Embedding Generation (768-dim)
   const tStartEmb = performance.now();
   let queryEmbedding: number[] = [];
   try {
     queryEmbedding = await getEmbedding(query, "RETRIEVAL_QUERY");
   } catch (err: any) {
-    await new Promise((r) => setTimeout(r, 100));
+    await new Promise((r) => setTimeout(r, 80));
     queryEmbedding = await getEmbedding(query, "RETRIEVAL_QUERY");
   }
   embeddingMs = performance.now() - tStartEmb;
 
-  // Stage 3: Pinecone Vector Retrieval
+  // Stage 3: Pinecone Vector Retrieval (Optimized topK = 3)
   const tStartRet = performance.now();
   let matches: any[] = [];
   try {
@@ -157,7 +158,7 @@ export async function executeRagHarness(
   const topScore = matches && matches.length > 0 ? matches[0].score : 0;
   const bestMatch = matches && matches.length > 0 ? matches[0] : null;
 
-  // Stage 4: Domain Relevance Guardrail
+  // Stage 4: Domain Relevance Guardrail (< 1ms)
   const tStartG2 = performance.now();
   const domainCheck = checkDomainRelevance(topScore, matches?.length || 0, 0.38);
   checks.push(domainCheck);
@@ -195,8 +196,7 @@ export async function executeRagHarness(
     };
   }
 
-  // Stage 5: Genuine LLM Context Reasoning & Synthesis
-  // Evaluates query against retrieved passages to ensure exact entity & attribute alignment
+  // Stage 5: Context Reasoning & Fast Synthesis (Gemini 2.5 Flash with token optimization)
   const tStartSyn = performance.now();
   let generatedAnswer = "";
 
@@ -204,12 +204,12 @@ export async function executeRagHarness(
     .slice(0, 3)
     .map((m: any, idx: number) => {
       if (isEnglish) {
-        return `[Source ${idx + 1}] (Match Score: ${(m.score * 100).toFixed(0)}%)
-Query in Dataset: ${m.query_en || m.query || "N/A"}
-Answer in Dataset: ${m.answer_en || m.answer || "N/A"}
-Passage Context: ${m.text_en || m.text_hi}`;
+        return `[Source ${idx + 1}] (Match: ${(m.score * 100).toFixed(0)}%)
+Dataset Query: ${m.query_en || m.query || "N/A"}
+Dataset Answer: ${m.answer_en || m.answer || "N/A"}
+Context: ${m.text_en || m.text_hi}`;
       }
-      return `[स्रोत ${idx + 1}] (स्कोर: ${(m.score * 100).toFixed(0)}%)
+      return `[स्रोत ${idx + 1}] (मैच: ${(m.score * 100).toFixed(0)}%)
 डेटासेट प्रश्न: ${m.query || "N/A"}
 डेटासेट उत्तर: ${m.answer || "N/A"}
 संदर्भ पाठ: ${m.text_hi}`;
@@ -220,15 +220,15 @@ Passage Context: ${m.text_en || m.text_hi}`;
     ? `You are an intelligent, strict Question-Answering system grounded exclusively in the provided context.
 Rules:
 1. Carefully check what specific entity and attribute the user is asking for (e.g. weight vs height, specific age, person, event, location).
-2. Look at the retrieved passages. If the passages discuss a related topic (e.g. height instead of weight, age 1-3 instead of age 5, different person/subject) but do NOT contain the exact answer for the user's question, you MUST NOT guess or output unrelated facts from the passage.
+2. Look at the retrieved passages. If the passages discuss a related topic (e.g. height instead of weight, age 1-3 instead of age 5) but do NOT contain the exact answer for the user's question, you MUST NOT guess or output unrelated facts.
 3. In that case, you MUST answer strictly with: "${strictRefusal}"
-4. If the exact answer IS present in the context, provide a clear, direct, and factual answer in English.`
+4. If the exact answer IS present in the context, provide a concise, direct, and factual answer in English.`
     : `आप एक अत्यंत सटीक और सख्त प्रश्न-उत्तर सहायक हैं।
 नियम:
 1. उपयोगकर्ता के प्रश्न और उसमें पूछी गई विशिष्ट जानकारी (जैसे वजन बनाम ऊंचाई, विशिष्ट आयु, व्यक्ति, स्थान आदि) को ध्यान से देखें।
 2. यदि दिए गए संदर्भ में प्रश्न का सटीक उत्तर मौजूद नहीं है (उदाहरण के लिए वजन पूछा गया है लेकिन संदर्भ में केवल ऊंचाई या अलग आयु दी गई है), तो कोई भी गलत या अप्रासंगिक उत्तर न दें।
 3. ऐसी स्थिति में आपका उत्तर केवल और केवल यही होना चाहिए: "${strictRefusal}"
-4. यदि सटीक उत्तर संदर्भ में उपलब्ध है, तो स्पष्ट और सटीक हिंदी में उत्तर दें।`;
+4. यदि सटीक उत्तर संदर्भ में उपलब्ध है, तो स्पष्ट और संक्षिप्त हिंदी में उत्तर दें।`;
 
   const userPrompt = `Context:\n${contextPrompt}\n\nUser Question: ${query}\n\nAnswer:`;
 
@@ -241,6 +241,10 @@ Rules:
           parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }],
         },
       ],
+      config: {
+        maxOutputTokens: 220,
+        temperature: 0.1,
+      },
     });
     generatedAnswer = modelResponse.text?.trim() || strictRefusal;
   } catch (synError) {
@@ -249,7 +253,7 @@ Rules:
   }
   synthesisMs = performance.now() - tStartSyn;
 
-  // Stage 6: Post-Execution Grounding Guardrail
+  // Stage 6: Post-Execution Grounding Guardrail (< 1ms)
   const tStartVer = performance.now();
   const passageTexts = (matches || []).map((m: any) => (isEnglish ? m.text_en || m.text_hi : m.text_hi));
   const groundingCheck = verifyGrounding(

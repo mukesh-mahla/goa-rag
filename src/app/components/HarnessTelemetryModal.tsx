@@ -6,12 +6,9 @@ import {
   Gauge,
   ShieldCheck,
   Zap,
-  Activity,
   CheckCircle2,
   Loader2,
   Play,
-  ArrowRight,
-  Terminal,
 } from "lucide-react";
 
 interface HarnessTelemetryModalProps {
@@ -45,35 +42,35 @@ export default function HarnessTelemetryModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xl flex items-center justify-center p-4">
-      <div className="relative stitch-glass rounded-3xl max-w-3xl w-full max-h-[88vh] overflow-y-auto shadow-2xl p-6 sm:p-8 space-y-6 text-white animate-fade-in">
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-4">
+      <div className="stitch-glass rounded-2xl sm:rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl p-4 sm:p-6 space-y-4 sm:space-y-6 text-white animate-fade-in border border-white/10">
         {/* Modal Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-white/10">
+        <div className="flex items-center justify-between pb-3 sm:pb-4 border-b border-white/10">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <h3 className="font-bold text-base sm:text-lg text-white">
+              <h3 className="font-bold text-sm sm:text-lg text-white">
                 SUB-200MS LATENCY & HARNESS TELEMETRY
               </h3>
-              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-cyan-950/80 text-cyan-300 border border-cyan-700/50">
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-950/80 text-cyan-300 border border-cyan-700/50">
                 TARGET: &lt;200ms
               </span>
             </div>
-            <p className="text-xs text-neutral-400">
+            <p className="text-[11px] sm:text-xs text-neutral-400">
               P50 / P70 / P100 Percentiles &bull; Fast-Path Metadata Synthesis &bull; Guardrails
             </p>
           </div>
 
           <button
             onClick={onClose}
-            className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-neutral-400 hover:text-white border border-white/10 transition-colors cursor-pointer"
+            className="p-1.5 sm:p-2 rounded-full bg-white/5 hover:bg-white/10 text-neutral-400 hover:text-white border border-white/10 transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Speed Architecture Highlights */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-1.5">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-1 sm:space-y-1.5">
             <div className="text-[11px] text-neutral-400 font-bold uppercase flex items-center gap-1.5">
               <Zap className="w-3.5 h-3.5 text-cyan-400" />
               LRU In-Memory Cache
@@ -83,7 +80,7 @@ export default function HarnessTelemetryModal({
             </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-1.5">
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-1 sm:space-y-1.5">
             <div className="text-[11px] text-neutral-400 font-bold uppercase flex items-center gap-1.5">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
               Fast-Path Grounding
@@ -93,7 +90,7 @@ export default function HarnessTelemetryModal({
             </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-1.5">
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-1 sm:space-y-1.5">
             <div className="text-[11px] text-neutral-400 font-bold uppercase flex items-center gap-1.5">
               <ShieldCheck className="w-3.5 h-3.5 text-purple-400" />
               Guardrail Overhead
@@ -105,20 +102,20 @@ export default function HarnessTelemetryModal({
         </div>
 
         {/* Action Trigger Card */}
-        <div className="flex items-center justify-between p-4 sm:p-5 rounded-2xl bg-white/[0.03] border border-white/10">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 sm:p-5 rounded-2xl bg-white/[0.03] border border-white/10">
           <div className="space-y-0.5">
             <span className="text-xs font-bold text-white block">
               Run Pure TypeScript Benchmark Suite
             </span>
             <span className="text-[11px] text-neutral-400">
-              Evaluates 15 test queries (in-domain, out-of-domain, adversarial, and paraphrased).
+              Evaluates test queries across in-domain, out-of-domain, and adversarial scenarios.
             </span>
           </div>
 
           <button
             onClick={runBenchmark}
             disabled={isRunning}
-            className="px-5 py-2 rounded-full bg-white hover:bg-neutral-200 disabled:opacity-50 text-black font-semibold text-xs shadow-md transition-all flex items-center gap-2 cursor-pointer"
+            className="w-full sm:w-auto px-5 py-2 rounded-full bg-white hover:bg-neutral-200 disabled:opacity-50 text-black font-semibold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
           >
             {isRunning ? (
               <>
@@ -142,73 +139,78 @@ export default function HarnessTelemetryModal({
 
         {/* Benchmark Results */}
         {benchmarkData && (
-          <div className="space-y-4 animate-fade-in">
+          <div className="space-y-3 sm:space-y-4 animate-fade-in">
             {/* Percentiles Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-              <div className="p-3.5 rounded-lg bg-black border border-neutral-800 text-center space-y-1">
-                <span className="text-[10px] font-mono uppercase text-neutral-500 block">P50 (Median)</span>
-                <span className="text-2xl font-mono font-bold text-white">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+              <div className="p-3 sm:p-4 rounded-2xl bg-white/[0.03] border border-white/10 text-center">
+                <span className="text-[10px] uppercase text-neutral-400 block font-mono">
+                  P50 (Median)
+                </span>
+                <span className="text-lg sm:text-2xl font-mono font-extrabold text-white">
                   {benchmarkData.percentiles.P50_ms}ms
                 </span>
-                <span className="text-[10px] font-mono text-emerald-400 block">
-                  {benchmarkData.percentiles.P50_ms < 200 ? "✓ <200ms TARGET MET" : "OPTIMIZED"}
+                <span className="text-[10px] font-mono text-cyan-400 block mt-0.5">
+                  {benchmarkData.percentiles.P50_ms < 200 ? "✓ < 200ms TARGET MET" : "OPTIMIZED"}
                 </span>
               </div>
 
-              <div className="p-3.5 rounded-lg bg-black border border-neutral-800 text-center space-y-1">
-                <span className="text-[10px] font-mono uppercase text-neutral-500 block">P70 Latency</span>
-                <span className="text-2xl font-mono font-bold text-neutral-200">
+              <div className="p-3 sm:p-4 rounded-2xl bg-white/[0.03] border border-white/10 text-center">
+                <span className="text-[10px] uppercase text-neutral-400 block font-mono">
+                  P70 Latency
+                </span>
+                <span className="text-lg sm:text-2xl font-mono font-extrabold text-white">
                   {benchmarkData.percentiles.P70_ms}ms
                 </span>
-                <span className="text-[10px] font-mono text-neutral-500 block">70th Percentile</span>
               </div>
 
-              <div className="p-3.5 rounded-lg bg-black border border-neutral-800 text-center space-y-1">
-                <span className="text-[10px] font-mono uppercase text-neutral-500 block">P90 Latency</span>
-                <span className="text-2xl font-mono font-bold text-neutral-300">
+              <div className="p-3 sm:p-4 rounded-2xl bg-white/[0.03] border border-white/10 text-center">
+                <span className="text-[10px] uppercase text-neutral-400 block font-mono">
+                  P90 Latency
+                </span>
+                <span className="text-lg sm:text-2xl font-mono font-extrabold text-white">
                   {benchmarkData.percentiles.P90_ms}ms
                 </span>
-                <span className="text-[10px] font-mono text-neutral-500 block">90th Percentile</span>
               </div>
 
-              <div className="p-3.5 rounded-lg bg-black border border-neutral-800 text-center space-y-1">
-                <span className="text-[10px] font-mono uppercase text-neutral-500 block">P100 (Max)</span>
-                <span className="text-2xl font-mono font-bold text-neutral-400">
+              <div className="p-3 sm:p-4 rounded-2xl bg-white/[0.03] border border-white/10 text-center">
+                <span className="text-[10px] uppercase text-neutral-400 block font-mono">
+                  P100 (Max)
+                </span>
+                <span className="text-lg sm:text-2xl font-mono font-extrabold text-white">
                   {benchmarkData.percentiles.P100_ms}ms
                 </span>
-                <span className="text-[10px] font-mono text-neutral-500 block">Cold Start Max</span>
               </div>
             </div>
 
             {/* Stage Averages Breakdown */}
-            <div className="p-4 rounded-lg bg-black border border-neutral-800 space-y-2.5">
-              <span className="text-xs font-mono font-bold text-neutral-300 block">
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2">
+              <span className="text-xs font-semibold text-neutral-300 block">
                 Pipeline Stage Breakdown:
               </span>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono">
-                <div className="bg-neutral-950 p-2 rounded border border-neutral-850">
+                <div className="bg-white/5 p-2 rounded-lg">
                   <span className="text-neutral-500 block text-[10px]">Embedding:</span>
                   <span className="text-white font-bold">{benchmarkData.stageAverages.avgEmbeddingMs}ms</span>
                 </div>
-                <div className="bg-neutral-950 p-2 rounded border border-neutral-850">
+                <div className="bg-white/5 p-2 rounded-lg">
                   <span className="text-neutral-500 block text-[10px]">Pinecone Search:</span>
                   <span className="text-white font-bold">{benchmarkData.stageAverages.avgRetrievalMs}ms</span>
                 </div>
-                <div className="bg-neutral-950 p-2 rounded border border-neutral-850">
+                <div className="bg-white/5 p-2 rounded-lg">
                   <span className="text-neutral-500 block text-[10px]">Synthesis/Metadata:</span>
                   <span className="text-white font-bold">{benchmarkData.stageAverages.avgSynthesisMs}ms</span>
                 </div>
-                <div className="bg-neutral-950 p-2 rounded border border-neutral-850">
+                <div className="bg-white/5 p-2 rounded-lg">
                   <span className="text-neutral-500 block text-[10px]">Guardrails:</span>
-                  <span className="text-emerald-400 font-bold">{benchmarkData.stageAverages.avgGuardrailMs}ms</span>
+                  <span className="text-white font-bold">{benchmarkData.stageAverages.avgGuardrailMs}ms</span>
                 </div>
               </div>
             </div>
 
             {/* Guardrail Accuracy Badge */}
-            <div className="flex items-center justify-between text-xs font-mono bg-neutral-950 border border-neutral-800 p-3 rounded-lg">
-              <span className="text-neutral-300 font-semibold">Guardrail Decision Accuracy:</span>
-              <span className="text-emerald-400 font-bold">{benchmarkData.guardrailAccuracy}</span>
+            <div className="flex items-center justify-between text-xs font-mono bg-white/[0.04] border border-white/10 p-3 rounded-xl">
+              <span className="text-neutral-300">Guardrail Decision Accuracy:</span>
+              <span className="text-white font-bold">{benchmarkData.guardrailAccuracy}</span>
             </div>
           </div>
         )}
@@ -216,4 +218,3 @@ export default function HarnessTelemetryModal({
     </div>
   );
 }
-

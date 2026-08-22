@@ -16,7 +16,7 @@
   body {
     background-color: #000000;
     color: #ffffff;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-family: var(--font-geist-sans), "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
   }
@@ -99,19 +99,53 @@
   background: rgba(255, 255, 255, 0.3);
 }
 
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
 /* Animations */
-@keyframes auroraFloat {
-  0%, 100% {
-    transform: translateY(0px) scale(1);
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
   }
-  50% {
-    transform: translateY(-20px) scale(1.05);
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-.animate-aurora {
-  animation: auroraFloat 8s ease-in-out infinite;
+.animate-fade-in {
+  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-
-
+/* Strictly Hide Injected Watermark Badges, Logos, and Anchor Tags */
+a[href*="aidesigner.ai"],
+a[href*="aidesigner"],
+a[href*="cdn.aidesigner.ai"],
+[class*="aifx-badge"],
+[id*="aifx-badge"],
+[data-aifx-badge],
+.aidesigner-badge,
+iframe[src*="aidesigner"],
+div:has(> a[href*="aidesigner"]),
+div:has(> a[href*="aidesigner.ai"]) {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  position: fixed !important;
+  bottom: -9999px !important;
+  right: -9999px !important;
+  z-index: -9999 !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}
