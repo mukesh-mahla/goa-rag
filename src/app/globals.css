@@ -2,75 +2,116 @@
 
 @layer base {
   :root {
-    --background: #080b13;
-    --foreground: #f1f5f9;
-    --card: #0f1422;
-    --card-foreground: #f1f5f9;
-    --primary: #8b5cf6;
-    --primary-foreground: #ffffff;
-    --border: #1e293b;
-    --muted: #64748b;
+    --background: #000000;
+    --foreground: #ffffff;
+    --card: rgba(18, 20, 32, 0.6);
+    --border: rgba(255, 255, 255, 0.1);
   }
 
   * {
     box-sizing: border-box;
-    border-color: #1e293b;
+    border-color: rgba(255, 255, 255, 0.1);
   }
 
   body {
-    background-color: #080b13;
-    color: #f1f5f9;
+    background-color: #000000;
+    color: #ffffff;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
   }
 }
 
-/* Background Cosmic Radial Glow */
-.bg-dashboard-glow {
-  background-image: 
-    radial-gradient(circle at 50% 15%, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.08) 35%, transparent 70%),
-    radial-gradient(circle at 90% 20%, rgba(168, 85, 247, 0.12) 0%, transparent 50%),
-    radial-gradient(circle at 10% 80%, rgba(59, 130, 246, 0.08) 0%, transparent 40%);
+/* Google Stitch Dot Matrix Grid */
+.bg-stitch-dots {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.16) 1px, transparent 1px);
+  background-size: 24px 24px;
 }
 
-.bg-dot-pattern {
-  background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px);
-  background-size: 28px 28px;
+/* Google Stitch Aurora Light Waves */
+.stitch-aurora-glow {
+  position: absolute;
+  pointer-events: none;
+  filter: blur(90px);
+  opacity: 0.8;
+  z-index: 0;
 }
 
-/* Custom Sleek Scrollbar */
+.stitch-aurora-1 {
+  background: radial-gradient(ellipse at center, rgba(6, 182, 212, 0.45) 0%, rgba(59, 130, 246, 0.35) 45%, transparent 70%);
+}
+
+.stitch-aurora-2 {
+  background: radial-gradient(ellipse at center, rgba(217, 70, 239, 0.4) 0%, rgba(147, 51, 234, 0.3) 45%, transparent 70%);
+}
+
+.stitch-aurora-3 {
+  background: radial-gradient(ellipse at center, rgba(99, 102, 241, 0.35) 0%, rgba(168, 85, 247, 0.25) 50%, transparent 75%);
+}
+
+/* Google Stitch Frosted Glass Card */
+.stitch-glass {
+  background: rgba(18, 22, 38, 0.6);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.stitch-glass:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.stitch-glass-active {
+  background: rgba(26, 31, 54, 0.75);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+}
+
+.stitch-pill {
+  background: rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.stitch-pill:hover {
+  background: rgba(255, 255, 255, 0.13);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+/* Custom Minimalist Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #080b13;
+  background: #000000;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
+  background: rgba(255, 255, 255, 0.15);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: rgba(255, 255, 255, 0.3);
 }
 
 /* Animations */
-@keyframes pulseSubtle {
+@keyframes auroraFloat {
   0%, 100% {
-    opacity: 0.4;
-    transform: scale(1);
+    transform: translateY(0px) scale(1);
   }
   50% {
-    opacity: 0.9;
-    transform: scale(1.03);
+    transform: translateY(-20px) scale(1.05);
   }
 }
 
-.animate-pulse-subtle {
-  animation: pulseSubtle 3s ease-in-out infinite;
+.animate-aurora {
+  animation: auroraFloat 8s ease-in-out infinite;
 }
+
 
 

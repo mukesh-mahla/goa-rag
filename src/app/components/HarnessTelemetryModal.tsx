@@ -45,33 +45,27 @@ export default function HarnessTelemetryModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="relative bg-neutral-950 border border-neutral-800 rounded-xl max-w-3xl w-full max-h-[88vh] overflow-y-auto shadow-2xl p-6 space-y-6 text-neutral-100 animate-fade-in">
-        {/* Corner Crosses */}
-        <div className="absolute top-2 left-2 text-[9px] font-mono text-neutral-600 pointer-events-none">+</div>
-        <div className="absolute top-2 right-2 text-[9px] font-mono text-neutral-600 pointer-events-none">+</div>
-        <div className="absolute bottom-2 left-2 text-[9px] font-mono text-neutral-600 pointer-events-none">+</div>
-        <div className="absolute bottom-2 right-2 text-[9px] font-mono text-neutral-600 pointer-events-none">+</div>
-
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xl flex items-center justify-center p-4">
+      <div className="relative stitch-glass rounded-3xl max-w-3xl w-full max-h-[88vh] overflow-y-auto shadow-2xl p-6 sm:p-8 space-y-6 text-white animate-fade-in">
         {/* Modal Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-neutral-800">
+        <div className="flex items-center justify-between pb-4 border-b border-white/10">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <h3 className="font-mono font-bold text-base sm:text-lg text-white">
+              <h3 className="font-bold text-base sm:text-lg text-white">
                 SUB-200MS LATENCY & HARNESS TELEMETRY
               </h3>
-              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-neutral-900 text-emerald-400 border border-emerald-900/60">
+              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-cyan-950/80 text-cyan-300 border border-cyan-700/50">
                 TARGET: &lt;200ms
               </span>
             </div>
-            <p className="text-xs text-neutral-400 font-mono">
+            <p className="text-xs text-neutral-400">
               P50 / P70 / P100 Percentiles &bull; Fast-Path Metadata Synthesis &bull; Guardrails
             </p>
           </div>
 
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg bg-neutral-900 hover:bg-neutral-800 text-neutral-400 hover:text-white border border-neutral-800 transition-colors cursor-pointer"
+            className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-neutral-400 hover:text-white border border-white/10 transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -79,44 +73,44 @@ export default function HarnessTelemetryModal({
 
         {/* Speed Architecture Highlights */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="p-3.5 rounded-lg bg-black border border-neutral-850 space-y-1">
-            <div className="text-[10px] font-mono text-neutral-400 font-bold uppercase flex items-center gap-1.5">
-              <Zap className="w-3.5 h-3.5 text-white" />
+          <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-1.5">
+            <div className="text-[11px] text-neutral-400 font-bold uppercase flex items-center gap-1.5">
+              <Zap className="w-3.5 h-3.5 text-cyan-400" />
               LRU In-Memory Cache
             </div>
-            <p className="text-xs text-neutral-300">
+            <p className="text-xs text-neutral-300 leading-relaxed">
               Cached vector embeddings resolve in <strong className="text-white font-mono">2ms &ndash; 15ms</strong>.
             </p>
           </div>
 
-          <div className="p-3.5 rounded-lg bg-black border border-neutral-850 space-y-1">
-            <div className="text-[10px] font-mono text-neutral-400 font-bold uppercase flex items-center gap-1.5">
+          <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-1.5">
+            <div className="text-[11px] text-neutral-400 font-bold uppercase flex items-center gap-1.5">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
               Fast-Path Grounding
             </div>
-            <p className="text-xs text-neutral-300">
+            <p className="text-xs text-neutral-300 leading-relaxed">
               Direct Pinecone metadata verification bypasses LLM in <strong className="text-emerald-400 font-mono">&lt;5ms</strong>.
             </p>
           </div>
 
-          <div className="p-3.5 rounded-lg bg-black border border-neutral-850 space-y-1">
-            <div className="text-[10px] font-mono text-neutral-400 font-bold uppercase flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-white" />
+          <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-1.5">
+            <div className="text-[11px] text-neutral-400 font-bold uppercase flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-purple-400" />
               Guardrail Overhead
             </div>
-            <p className="text-xs text-neutral-300">
+            <p className="text-xs text-neutral-300 leading-relaxed">
               Safety and out-of-domain filters execute in <strong className="text-white font-mono">&lt;1ms</strong>.
             </p>
           </div>
         </div>
 
         {/* Action Trigger Card */}
-        <div className="flex items-center justify-between p-4 rounded-lg bg-black border border-neutral-800">
+        <div className="flex items-center justify-between p-4 sm:p-5 rounded-2xl bg-white/[0.03] border border-white/10">
           <div className="space-y-0.5">
-            <span className="font-mono text-xs font-bold text-white block">
+            <span className="text-xs font-bold text-white block">
               Run Pure TypeScript Benchmark Suite
             </span>
-            <span className="text-[11px] text-neutral-400 font-mono">
+            <span className="text-[11px] text-neutral-400">
               Evaluates 15 test queries (in-domain, out-of-domain, adversarial, and paraphrased).
             </span>
           </div>
@@ -124,7 +118,7 @@ export default function HarnessTelemetryModal({
           <button
             onClick={runBenchmark}
             disabled={isRunning}
-            className="px-4 py-2 rounded-full bg-white hover:bg-neutral-200 disabled:opacity-50 text-black font-mono font-bold text-xs shadow-sm transition-all flex items-center gap-2 cursor-pointer"
+            className="px-5 py-2 rounded-full bg-white hover:bg-neutral-200 disabled:opacity-50 text-black font-semibold text-xs shadow-md transition-all flex items-center gap-2 cursor-pointer"
           >
             {isRunning ? (
               <>
@@ -133,7 +127,7 @@ export default function HarnessTelemetryModal({
               </>
             ) : (
               <>
-                <Play className="w-3 h-3 fill-black" />
+                <Play className="w-3 h-3 fill-black text-black" />
                 <span>Run Benchmark</span>
               </>
             )}

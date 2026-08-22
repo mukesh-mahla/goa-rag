@@ -47,10 +47,10 @@ export default function PassageViewer({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="group flex items-center gap-2 text-xs font-mono text-slate-400 hover:text-purple-300 transition-colors py-1 cursor-pointer"
+        className="group flex items-center gap-2 text-xs text-neutral-400 hover:text-cyan-300 transition-colors py-1 cursor-pointer"
       >
-        <span className="w-1.5 h-1.5 rounded-full bg-purple-500 group-hover:bg-purple-400 transition-colors" />
-        <span className="border-b border-dotted border-slate-700 pb-0.5">
+        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 group-hover:bg-cyan-300 transition-colors" />
+        <span className="border-b border-dotted border-white/20 pb-0.5">
           {isOpen
             ? isEnglish
               ? "Hide verified dataset sources"
@@ -60,26 +60,26 @@ export default function PassageViewer({
             : `${matches?.length || 0} सत्यापित स्रोत और डेटासेट उत्तर देखें`}
         </span>
         {isOpen ? (
-          <ChevronUp className="w-3.5 h-3.5 text-slate-400 group-hover:text-white transition-colors" />
+          <ChevronUp className="w-3.5 h-3.5 text-neutral-400 group-hover:text-white transition-colors" />
         ) : (
-          <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-hover:text-white transition-colors" />
+          <ChevronDown className="w-3.5 h-3.5 text-neutral-400 group-hover:text-white transition-colors" />
         )}
       </button>
 
       {/* Collapsible Content */}
       {isOpen && (
-        <div className="mt-2.5 p-3.5 rounded-xl bg-[#0b0f1a]/90 border border-slate-800 space-y-3 text-xs shadow-inner">
+        <div className="mt-2.5 p-3.5 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/10 space-y-3 text-xs shadow-inner">
           {/* Ground Truth Answer */}
           {displayGroundTruth && (
-            <div className="space-y-1.5 border-b border-slate-800 pb-3">
-              <div className="flex items-center justify-between font-mono text-[10px]">
+            <div className="space-y-1.5 border-b border-white/10 pb-3">
+              <div className="flex items-center justify-between text-[10px]">
                 <span className="text-emerald-400 font-semibold uppercase tracking-wider flex items-center gap-1.5">
                   <CheckCircle2 className="w-3 h-3 text-emerald-400" />
                   {isEnglish ? "Ground Truth Dataset Answer:" : "डेटासेट का मूल उत्तर:"}
                 </span>
-                <span className="text-slate-500">100% GROUNDED</span>
+                <span className="text-neutral-500">100% GROUNDED</span>
               </div>
-              <p className="text-slate-200 bg-[#080b13] p-3 rounded-lg border border-emerald-900/40 leading-relaxed font-sans text-xs">
+              <p className="text-neutral-200 bg-white/[0.03] p-3 rounded-xl border border-emerald-500/20 leading-relaxed font-sans text-xs">
                 {displayGroundTruth}
               </p>
             </div>
@@ -88,8 +88,8 @@ export default function PassageViewer({
           {/* Retrieved Context Passages */}
           {matches && matches.length > 0 && (
             <div className="space-y-2.5">
-              <div className="flex items-center justify-between font-mono text-[10px] text-slate-500">
-                <span className="uppercase font-semibold text-slate-400">
+              <div className="flex items-center justify-between text-[10px] text-neutral-400">
+                <span className="uppercase font-semibold">
                   {isEnglish ? "Retrieved Passages:" : "प्रासंगिक संदर्भ:"}
                 </span>
                 <span>Pinecone Index</span>
@@ -100,20 +100,20 @@ export default function PassageViewer({
                 return (
                   <div
                     key={match.id || idx}
-                    className="group relative p-3 rounded-lg bg-[#080b13] border border-slate-800/80 hover:border-purple-500/50 transition-colors space-y-1.5"
+                    className="group relative p-3 rounded-xl bg-white/[0.03] border border-white/10 hover:border-cyan-500/40 transition-colors space-y-1.5"
                   >
-                    <div className="flex items-center justify-between text-[10px] font-mono">
+                    <div className="flex items-center justify-between text-[10px]">
                       <div className="flex items-center gap-2">
-                        <span className="text-purple-400 font-semibold">Source #{idx + 1}</span>
+                        <span className="text-cyan-400 font-semibold">Source #{idx + 1}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="px-2 py-0.5 rounded-full bg-purple-950/60 border border-purple-800/60 text-purple-300 font-medium">
+                        <span className="px-2 py-0.5 rounded-full bg-cyan-950/60 border border-cyan-800/60 text-cyan-300 font-medium">
                           {((match.score || 0) * 100).toFixed(0)}% match
                         </span>
                         <button
                           type="button"
                           onClick={() => handleCopy(text, idx)}
-                          className="p-1 text-slate-500 hover:text-white transition-colors cursor-pointer"
+                          className="p-1 text-neutral-400 hover:text-white transition-colors cursor-pointer"
                           title="Copy passage"
                         >
                           {copiedIdx === idx ? (
@@ -124,7 +124,7 @@ export default function PassageViewer({
                         </button>
                       </div>
                     </div>
-                    <p className="text-slate-300 leading-relaxed text-[11px] font-sans">
+                    <p className="text-neutral-300 leading-relaxed text-[11px] font-sans">
                       {text}
                     </p>
                   </div>

@@ -231,23 +231,23 @@ export default function AudioNavigator({
   };
 
   return (
-    <div className="pt-2.5 mt-2 border-t border-slate-800/80 text-slate-300">
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-[#0b0f1a]/80 p-2.5 rounded-xl border border-slate-800">
+    <div className="pt-2.5 mt-2 border-t border-white/10 text-neutral-300">
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-white/[0.04] backdrop-blur-xl p-2.5 rounded-2xl border border-white/10">
         {/* Left: Play/Pause Button */}
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={togglePlayPause}
             disabled={isLoadingAudio}
-            className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white transition-all flex items-center justify-center shrink-0 cursor-pointer shadow-md shadow-purple-500/20 disabled:opacity-40"
+            className="w-8 h-8 rounded-full bg-white hover:bg-neutral-200 text-black transition-all flex items-center justify-center shrink-0 cursor-pointer shadow-md disabled:opacity-40"
             title={isPlaying ? "Pause" : "Listen to answer"}
           >
             {isLoadingAudio ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-black" />
             ) : isPlaying ? (
-              <Pause className="w-3.5 h-3.5 fill-white text-white" />
+              <Pause className="w-3.5 h-3.5 fill-black text-black" />
             ) : (
-              <Play className="w-3.5 h-3.5 fill-white text-white ml-0.5" />
+              <Play className="w-3.5 h-3.5 fill-black text-black ml-0.5" />
             )}
           </button>
 
@@ -256,7 +256,7 @@ export default function AudioNavigator({
             <button
               type="button"
               onClick={handleRewind}
-              className="text-[11px] font-mono px-2 py-1 rounded-lg bg-slate-900/60 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
+              className="text-[11px] px-2 py-1 rounded-full bg-white/5 hover:bg-white/10 text-neutral-400 hover:text-white transition-colors"
               title="Rewind 5s"
             >
               -5s
@@ -264,7 +264,7 @@ export default function AudioNavigator({
             <button
               type="button"
               onClick={handleFastForward}
-              className="text-[11px] font-mono px-2 py-1 rounded-lg bg-slate-900/60 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
+              className="text-[11px] px-2 py-1 rounded-full bg-white/5 hover:bg-white/10 text-neutral-400 hover:text-white transition-colors"
               title="Forward 5s"
             >
               +5s
@@ -281,24 +281,24 @@ export default function AudioNavigator({
             step="0.1"
             value={currentTime}
             onChange={handleSeek}
-            className="w-full h-1.5 bg-slate-800 rounded-full appearance-none cursor-pointer accent-purple-500 focus:outline-none"
+            className="w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-cyan-400 focus:outline-none"
           />
-          <span className="font-mono text-[11px] text-slate-400 shrink-0">
+          <span className="font-mono text-[11px] text-neutral-400 shrink-0">
             {formatTime(currentTime)} / {formatTime(duration)}
           </span>
         </div>
 
         {/* Right: Speed Multipliers */}
-        <div className="flex items-center gap-1 bg-[#131929] p-0.5 rounded-lg border border-slate-800">
+        <div className="flex items-center gap-1 bg-white/5 p-0.5 rounded-full border border-white/10">
           {[1.0, 1.25, 1.5, 2.0].map((rate) => (
             <button
               key={rate}
               type="button"
               onClick={() => handleSpeedChange(rate)}
-              className={`font-mono text-[10px] px-1.5 py-0.5 rounded transition-all cursor-pointer ${
+              className={`text-[10px] px-2 py-0.5 rounded-full transition-all cursor-pointer ${
                 playbackRate === rate
-                  ? "bg-purple-600 text-white font-bold"
-                  : "text-slate-400 hover:text-white"
+                  ? "bg-white text-black font-bold"
+                  : "text-neutral-400 hover:text-white"
               }`}
             >
               {rate}x
