@@ -28,9 +28,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Build FormData for Sarvam AI Speech-to-Text API
+    // Determine correct filename and extension for Sarvam STT based on browser MIME (Safari mp4 vs Chrome webm/wav)
+    const rawType = audioFile.type || "audio/webm";
+    let filename = "audio.webm";
+    if (rawType.includes("mp4") || rawType.includes("m4a") || rawType.includes("aac")) {
+      filename = "audio.mp4";
+    } else if (rawType.includes("wav")) {
+      filename = "audio.wav";
+    } else if (rawType.includes("ogg") || rawType.includes("opus")) {
+      filename = "audio.ogg";
+    }
+
+    // Build FormData for Sarvam AI Speech-to-Text API (saarika:v2)
     const sarvamForm = new FormData();
-    sarvamForm.append("file", audioFile, "audio.wav");
+    sarvamForm.append("file", audioFile, filename);
     sarvamForm.append("model", "saarika:v2");
     sarvamForm.append("language_code", requestedLanguage);
     sarvamForm.append("with_diacritics", "true");
@@ -60,7 +71,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       transcript,
-      language_code: data.language_code || "hi-IN",
+      language_code: data.language_code || requestedLanguage,
     });
   } catch (error: any) {
     console.error("STT route error:", error);
